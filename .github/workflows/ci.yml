@@ -21,9 +21,11 @@ jobs:
       - run: python3 -m pip install --target runtime/python-libs -r scripts/requirements-alignment.txt
       - run: npm ci --ignore-scripts
       - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - name: Use installed Chromium for render and UI tests
+        run: node --input-type=module -e "import {chromium} from 'playwright'; console.log('HYPERFRAMES_BROWSER_PATH='+chromium.executablePath()); console.log('PUPPETEER_EXECUTABLE_PATH='+chromium.executablePath())" >> "$GITHUB_ENV"
       - run: npm test
       - run: npm audit --audit-level=moderate
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: node scripts/upload-browser-check.mjs
   secrets:

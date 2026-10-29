@@ -5,6 +5,7 @@ Revisión realizada el 29 de octubre de 2026 sobre la copia preparada para publi
 - Suite completa: 282 pruebas aprobadas, sin fallos ni pruebas omitidas.
 - Pruebas de navegador: panel, conexiones simuladas, CSRF, persistencia, desktop/mobile, temas claro/oscuro y carga de un MOV sintético; aprobadas.
 - Sintaxis JavaScript y Python: aprobada.
+- Compatibilidad FFmpeg: etiquetas HDR explícitas también en el remux final; cubre el cambio de comportamiento detectado al ejecutar en Ubuntu 26.04.
 - `npm audit`: no reportó vulnerabilidades conocidas en las dependencias fijadas.
 - Gitleaks 8.30.1: sin hallazgos en los archivos de publicación; también se comprueba el historial nuevo antes de entregar.
 - Comparación local con los valores privados de la instalación original: sin coincidencias en el código exportado. El informe no publica esos valores.

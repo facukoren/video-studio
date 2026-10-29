@@ -247,7 +247,7 @@ async function encodeSegments(source, segments, metadata, outputDir, target, con
     const videoList = join(chunks,'video.ffconcat'), audioList = join(chunks,'audio.ffconcat');
     await writeFile(videoList,videoFiles.map(name=>`file '${name}'`).join('\n'));
     await writeFile(audioList,audioFiles.map(name=>`file '${name}'`).join('\n'));
-    await runMediaCommand(config.ffmpegPath || 'ffmpeg',['-y','-hide_banner','-nostdin','-threads',threads,'-f','concat','-safe','1','-i',videoList,'-f','concat','-safe','1','-i',audioList,'-map','0:v:0','-map','1:a:0','-c:v','copy','-c:a','aac','-b:a','192k','-ar','48000','-movflags','+faststart',target],{timeout});
+    await runMediaCommand(config.ffmpegPath || 'ffmpeg',['-y','-hide_banner','-nostdin','-threads',threads,'-f','concat','-safe','1','-i',videoList,'-f','concat','-safe','1','-i',audioList,'-map','0:v:0','-map','1:a:0','-c:v','copy',...colors,'-c:a','aac','-b:a','192k','-ar','48000','-movflags','+faststart',target],{timeout});
   } finally { await rm(chunks,{recursive:true,force:true}); }
 }
 
