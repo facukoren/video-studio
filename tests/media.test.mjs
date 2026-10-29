@@ -164,7 +164,7 @@ test('bounded cuts preserve HDR color tags and ten-bit samples until SDR renderi
  try{
   const config={ffmpegPath:localFfmpeg,ffprobePath:localFfmpeg.replace(/ffmpeg$/,'ffprobe')};
   const source=join(dir,'source.mp4');
-  await media.runMediaCommand(localFfmpeg,['-y','-v','error','-f','lavfi','-i','color=c=blue:size=128x128:rate=30:duration=1','-f','lavfi','-i','sine=frequency=440:sample_rate=48000:duration=1','-c:v','libx264','-threads','2','-filter_threads','1','-pix_fmt','yuv420p10le','-color_primaries','bt2020','-color_trc','smpte2084','-colorspace','bt2020nc','-c:a','aac','-shortest',source]);
+  await media.runMediaCommand(localFfmpeg,['-y','-v','error','-f','lavfi','-i','color=c=blue:size=128x128:rate=30:duration=1','-f','lavfi','-i','sine=frequency=440:sample_rate=48000:duration=1','-c:v','libx264','-threads','2','-filter_threads','1','-vf','format=yuv420p10le,setparams=color_primaries=bt2020:color_trc=smpte2084:colorspace=bt2020nc','-pix_fmt','yuv420p10le','-color_primaries','bt2020','-color_trc','smpte2084','-colorspace','bt2020nc','-c:a','aac','-shortest',source]);
   const inputVideo=(await media.probe(source,config)).streams.find(s=>s.codec_type==='video');
   assert.equal(inputVideo.color_primaries,'bt2020','The generated HDR fixture must carry its source color primaries: '+JSON.stringify(inputVideo));
   const result=await media.cutVideo(source,[word(0,1)],dir,config);
