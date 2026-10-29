@@ -15,7 +15,7 @@ Editor de videos autoalojado: subís una grabación o pegás un enlace de Drive 
 
 ## Requisitos
 
-Linux o WSL2, Node.js **24 o superior**, Python 3.11+, FFmpeg/ffprobe y `flock` (util-linux). El panel y el worker deben permanecer encendidos; la transcripción y el render se ejecutan en Modal.
+Linux o WSL2 (Ubuntu 24.04 recomendado para las herramientas de navegador), Node.js **24 o superior**, Python 3.11+, FFmpeg/ffprobe y `flock` (util-linux). El panel y el worker deben permanecer encendidos; la transcripción y el render se ejecutan en Modal.
 
 Necesitás tus propias cuentas de Google Drive, Modal, Higgsfield y una sesión de Codex que anuncie `gpt-6-astra` / `high`. El modelo está fijado: si tu cuenta no tiene acceso, la edición no estará disponible. El panel se puede iniciar antes de conectar los proveedores.
 
