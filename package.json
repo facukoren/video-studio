@@ -20,7 +20,7 @@
     "hyperframes": "0.8.186"
   },
   "devDependencies": {
-    "playwright": "1.56.1"
+    "playwright": "1.64.1"
   },
   "license": "MIT",
   "description": "Self-hosted video editing with word-level transcription, validated cuts, motion graphics and generated B-roll.",
