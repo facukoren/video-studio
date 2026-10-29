@@ -1,0 +1,15 @@
+[Unit]
+Description=Kavion Video Studio local dashboard
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/video-studio
+ExecStart=/usr/bin/env node --env-file=.env src/server.mjs
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

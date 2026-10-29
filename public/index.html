@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0e10">
+  <title>Videos · Kavion</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF4B1F'/%3E%3Cpath d='M11 8v16M12 16l10-8M12 16l10 8' fill='none' stroke='%2316171a' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ir al contenido</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/" aria-label="Kavion, inicio">KAVION<span class="brand-divider" aria-hidden="true"></span><span class="product-name">Studio</span></a>
+      <nav class="nav" aria-label="Principal"><a href="#main" aria-current="page">Videos</a></nav>
+      <div class="topbar-actions">
+        <span class="connection-label" id="connection-label"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">Conectando</span></span>
+        <button class="button button-quiet settings-trigger" id="settings-open" type="button" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 3-.7 2.3-2 .9-2.2-.6-2.1 3.6L4.1 11v2l-1.6 1.8 2.1 3.6 2.2-.6 2 .9.7 2.3h4.2l.7-2.3 2-.9 2.2.6 2.1-3.6-1.6-1.8v-2l1.6-1.8-2.1-3.6-2.2.6-2-.9-.7-2.3Z"/><circle cx="11.6" cy="12" r="3.2"/></svg>
+          <span>Configuración</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="page" tabindex="-1">
+    <div class="page-heading">
+      <div><h1>Edición de videos</h1><p>Pegá un enlace de Drive o subí tu video. La receta ya está lista.</p></div>
+      <span class="workspace-label"><span class="status-dot" aria-hidden="true"></span>Espacio de Kavion</span>
+    </div>
+
+    <div id="api-alert" class="notice notice-error" role="alert" hidden>
+      <div><strong>No pudimos conectar con el servidor</strong><p id="api-error-text">Revisá la conexión y volvé a intentar.</p></div>
+      <button id="reconnect" class="button button-secondary" type="button">Reconectar</button>
+    </div>
+
+    <section class="glass glass-card editor" aria-labelledby="editor-title">
+      <div class="core editor-core">
+        <div class="section-heading"><div class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3Z"/></svg></div><h2 id="editor-title">Nuevo video</h2></div>
+        <form id="video-form" novalidate>
+          <div class="source-modes" role="group" aria-label="Origen del video">
+            <button id="source-mode-drive" type="button" aria-pressed="true" aria-controls="drive-source">Enlace de Drive</button>
+            <button id="source-mode-upload" type="button" aria-pressed="false" aria-controls="file-source">Subir archivo</button>
+          </div>
+          <label id="source-label" for="source-url">Enlace del video en Drive</label>
+          <div class="input-row">
+            <div class="input-wrap" id="drive-source"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 13 4-4m-6 6-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 2 1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(1 1)"/></svg><input id="source-url" name="sourceUrl" type="url" placeholder="https://drive.google.com/file/d/…/view" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="source-hint source-error" required></div>
+            <div id="file-source" class="file-source" hidden><input id="source-file" type="file" accept=".mov,.mp4,.m4v,.mkv,.webm,.avi,.mpg,.mpeg,.mts,.m2ts" aria-describedby="source-hint source-error"><p id="selected-file" class="field-hint" hidden></p></div>
+            <button class="button button-primary" id="submit-video" type="submit" disabled><svg id="submit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 19 10-10 4 4L9 23M15 3v4m-2-2h4M5 6v4M3 8h4m12 9v4m-2-2h4" transform="translate(0 -2)"/></svg><span id="submit-label">Editar video</span><span class="spinner" id="submit-spinner" hidden aria-hidden="true"></span></button>
+          </div>
+          <p class="field-hint" id="source-hint">Usá el enlace de un archivo de video. El original se conserva.</p>
+          <div id="upload-progress" class="upload-progress" hidden><progress id="upload-meter" max="100" value="0" aria-label="Carga del video"></progress><p id="upload-progress-text" role="status">Preparando la carga…</p></div>
+          <p class="field-error" id="source-error" role="alert" hidden></p>
+          <p class="submission-message" id="submission-message" role="status" hidden></p>
+        </form>
+        <div class="destination-row">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+          <span>Guardar en</span>
+          <a id="destination-link" aria-disabled="true" target="_blank" rel="noopener noreferrer">Carpeta de salida<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+        </div>
+        <details class="recipe" id="recipe-disclosure">
+          <summary><span class="recipe-summary"><span class="recipe-label">Receta de edición</span><span class="recipe-description">Cortes ágiles<span aria-hidden="true"> · </span>Subtítulos<span aria-hidden="true"> · </span>B-roll</span></span><span class="recipe-toggle">Ver prompt<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+          <div class="recipe-body">
+            <div class="recipe-facts"><span>Silencios ≤ 0,3 s</span><span>Voz original</span><span>B-roll de 3 s o mínimo disponible</span></div>
+            <p class="recipe-prompt" id="recipe-prompt">Tomá como inspiración este video para entender cómo quiero que me ayudes a editar este nuevo video.
+Usá el video de referencia que configuraste para esta instalación.
+La idea es que la edición sea dopamínica, aplicando las skills de hyperframes que tenemos instaladas.
+Asegurate de recortar todos los silencios para que no queden silencios de más de 0,3s.
+Agregá Brolls coherentes con el video creándolos en higgsfield. (Brolls de 3 segundos o lo mínimo que deje).</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <div id="setup-notice" class="notice notice-warning" hidden>
+      <div class="notice-copy"><span class="status-dot" aria-hidden="true"></span><div><strong>Completá la configuración inicial</strong><p id="setup-notice-text">Conectá los servicios y definí un límite de créditos antes de procesar videos.</p></div></div>
+      <button class="button button-secondary" id="setup-notice-open" type="button" aria-haspopup="dialog">Configurar<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+    </div>
+
+    <section class="history-section" aria-labelledby="history-title">
+      <div class="history-heading"><div class="title-with-count"><h2 id="history-title">Tus videos</h2><span class="count" id="job-count" hidden>0</span></div><button class="button button-quiet refresh-button" id="refresh-jobs" type="button" aria-label="Actualizar videos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 6a8 8 0 0 1 13 3M5 15a8 8 0 0 0 13 3"/></svg><span>Actualizar</span></button></div>
+      <div class="glass glass-card history-shell"><div class="core history-core">
+        <div class="history-state" id="history-loading" role="status"><span class="spinner" aria-hidden="true"></span><p>Cargando tus videos…</p></div>
+        <div class="history-state history-empty" id="history-empty" hidden>
+          <div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="8" y="9" width="32" height="30" rx="5"/><path d="M8 17h32M17 9l-4 8m14-8-4 8m14-8-4 8m-11 6 8 5-8 5Z"/></svg></div>
+          <h3>Tu primer video empieza acá</h3><p>Pegá un enlace o subí un archivo arriba.<br>La edición y el resultado van a aparecer en este espacio.</p>
+          <button class="button button-text" id="focus-input" type="button">Agregar un video<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-5 5 5-5 5 5"/></svg></button>
+        </div>
+        <div class="history-state" id="history-error" hidden><h3>No pudimos cargar los videos</h3><p id="history-error-text">Volvé a intentarlo en unos segundos.</p><button class="button button-secondary" id="retry-history" type="button">Volver a intentar</button></div>
+        <ul class="job-list" id="job-list" aria-label="Historial de videos" hidden></ul>
+      </div></div>
+      <p class="history-note"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Los trabajos continúan aunque cierres esta página.</p>
+      <p class="field-error" id="history-update-error" role="status" hidden>No pudimos actualizar el historial. Mostramos la última información recibida.</p>
+    </section>
+    <noscript><p class="notice notice-error">Activá JavaScript para enviar videos y consultar el estado de tus ediciones.</p></noscript>
+    <footer class="page-footer"><span>Kavion · Video Studio</span><span>Uso interno</span></footer>
+  </main>
+
+  <dialog class="glass app-dialog" id="settings-dialog" aria-labelledby="settings-title" aria-describedby="settings-description">
+    <div class="core dialog-core">
+      <div class="dialog-heading"><div><h2 id="settings-title">Configuración</h2><p id="settings-description">Prepará el espacio para editar con un solo enlace.</p></div><button class="icon-button" type="button" data-close="settings-dialog" aria-label="Cerrar configuración"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+      <div id="settings-load-error" class="notice notice-error" role="alert" hidden>No pudimos cargar la configuración. Cerrá esta ventana y usá Reconectar.</div>
+      <section class="settings-section setup-section" aria-labelledby="drive-setup-title">
+        <div class="setup-heading"><span class="setup-number" aria-hidden="true">1</span><div><h3 id="drive-setup-title">Conectar Google Drive</h3><p class="section-description" id="google-setup-status" role="status">Consultando configuración…</p></div></div>
+        <div id="google-client-guide" hidden>
+          <ol class="setup-steps">
+            <li>En <a href="https://console.cloud.google.com/auth/clients?project=active-valve-489420-v2" target="_blank" rel="noopener noreferrer">Google Cloud → Clientes</a>, creá un cliente OAuth de tipo <strong>Aplicación web</strong>.</li>
+            <li>En <strong>URI de redireccionamiento autorizados</strong>, agregá esta dirección y guardá el cliente.</li>
+          </ol>
+          <div class="copy-field"><input id="google-redirect-uri" type="text" readonly aria-label="URI de redireccionamiento autorizada" spellcheck="false"><button id="copy-google-redirect" type="button" class="button button-secondary" disabled>Copiar</button></div>
+          <p class="field-hint" id="google-copy-status" role="status" hidden></p>
+          <p class="section-description setup-upload-description">Descargá el JSON de ese cliente y cargalo acá.</p>
+          <form id="google-client-form" class="setup-form" novalidate>
+            <label for="google-client-file">Archivo del cliente de Google (.json)</label>
+            <input id="google-client-file" type="file" accept=".json,application/json" aria-describedby="google-client-hint google-setup-error">
+            <p class="field-hint" id="google-client-hint">El archivo se guarda en este servidor privado. No hace falta pegar sus claves en el chat.</p>
+            <button id="upload-google-client" type="submit" class="button button-secondary" disabled>Cargar cliente de Google</button>
+          </form>
+        </div>
+        <a id="authorize-google" class="button button-secondary" href="/api/auth/google" hidden>Autorizar acceso a Drive</a>
+        <p id="google-setup-error" class="field-error" role="alert" hidden></p>
+        <p id="google-setup-success" class="submission-message" role="status" hidden></p>
+      </section>
+      <section class="settings-section setup-section" aria-labelledby="higgsfield-setup-title">
+        <div class="setup-heading"><span class="setup-number" aria-hidden="true">2</span><div><h3 id="higgsfield-setup-title">Conectar Higgsfield</h3><p class="section-description" id="higgsfield-setup-status" role="status">Consultando conexión…</p></div></div>
+        <button id="start-higgsfield" class="button button-secondary" type="button" disabled>Conectar Higgsfield</button>
+        <div id="higgsfield-waiting" hidden>
+          <ol class="setup-steps">
+            <li>Abrí Higgsfield e iniciá sesión con la misma cuenta con créditos que usás en el chat.</li>
+          </ol>
+          <a id="higgsfield-auth-link" class="button button-secondary" target="_blank" rel="noopener noreferrer" hidden>Abrir Higgsfield</a>
+          <ol class="setup-steps" start="2">
+            <li>Autorizá la conexión. Si terminás en una dirección <strong>127.0.0.1:8765/callback</strong> o <strong>localhost:8765/callback</strong> que no carga, copiá igual la dirección completa de la barra del navegador.</li>
+            <li>Volvé a esta ventana y pegá esa dirección para completar la conexión.</li>
+          </ol>
+          <form id="higgsfield-callback-form" class="setup-form" novalidate>
+            <label for="higgsfield-callback-url">Dirección de retorno de Higgsfield</label>
+            <input id="higgsfield-callback-url" type="url" placeholder="http://127.0.0.1:8765/callback?…" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="higgsfield-callback-hint higgsfield-setup-error" data-lpignore="true">
+            <p class="field-hint" id="higgsfield-callback-hint">Pegala solo acá: contiene un código de un solo uso. Se borra del campo al enviar.</p>
+            <button id="complete-higgsfield" class="button button-secondary" type="submit" disabled>Completar conexión</button>
+          </form>
+          <p id="higgsfield-expires" class="field-hint" hidden></p>
+        </div>
+        <p id="higgsfield-setup-error" class="field-error" role="alert" hidden></p>
+        <p id="higgsfield-setup-success" class="submission-message" role="status" hidden></p>
+      </section>
+      <section class="settings-section" aria-labelledby="integrations-title"><div class="subheading"><h3 id="integrations-title">Conexiones</h3><button class="button button-text" id="refresh-connections" type="button">Actualizar</button></div><p id="integrations-loading" class="muted">Consultando conexiones…</p><ul class="integration-list" id="integration-list"></ul><div class="worker-info"><span class="status-dot" id="worker-dot" aria-hidden="true"></span><span id="worker-status">Consultando motor de edición…</span></div></section>
+      <form id="settings-form" class="settings-section" novalidate>
+        <h3>Créditos de generación</h3>
+        <p class="section-description">Definí cuánto puede gastar Higgsfield en cada video.</p>
+        <label for="max-credits">Límite por video</label><div class="budget-input-wrap"><input id="max-credits" name="maxCreditsPerVideo" type="number" inputmode="decimal" min="0" max="10000" step="0.01" placeholder="Sin configurar" aria-describedby="budget-hint settings-error" required><span>créditos</span></div>
+        <p class="field-hint" id="budget-hint">No se generan B-rolls hasta que guardes un límite. Máximo de <span id="max-brolls">2</span> B-rolls por video.</p>
+        <p class="field-error" id="settings-error" role="alert" hidden></p><p class="submission-message" id="settings-success" role="status" hidden></p>
+        <div class="settings-destination"><span>Carpeta de salida</span><a id="settings-destination-link" aria-disabled="true" target="_blank" rel="noopener noreferrer">Carpeta de salida<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div>
+        <div class="dialog-actions"><button class="button button-secondary" type="button" data-close="settings-dialog">Cerrar</button><button class="button button-primary" id="save-settings" type="submit" disabled>Guardar límite</button></div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="glass app-dialog job-dialog" id="job-dialog" aria-labelledby="job-title" aria-describedby="job-subtitle">
+    <div class="core dialog-core">
+      <div class="dialog-heading"><div><h2 id="job-title">Detalle del video</h2><p class="break-word" id="job-subtitle">Consultando trabajo…</p></div><button class="icon-button" type="button" data-close="job-dialog" aria-label="Cerrar detalle del video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+      <div class="detail-meta"><span class="badge" id="detail-status">Cargando</span><span id="detail-date"></span><a id="detail-source" target="_blank" rel="noopener noreferrer" hidden>Ver original<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div>
+      <p class="notice notice-error" id="detail-fetch-error" role="alert" hidden></p>
+      <div class="notice" id="detail-error" hidden><div><strong id="detail-error-title"></strong><p id="detail-error-message"></p></div></div>
+      <section class="result-panel" id="detail-result" hidden><div class="result-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div><div><h3>Tu video está listo</h3><p id="result-filename"></p></div><a class="button button-primary" id="result-link" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>Ver en Drive</a><div class="video-preview"><video id="result-video" controls preload="metadata" playsinline aria-label="Vista previa del video editado" hidden></video><p id="preview-unavailable" role="status" hidden>La vista previa local no está disponible. Abrí el video en Drive.</p></div></section>
+      <section class="progress-section" aria-labelledby="progress-title"><h3 id="progress-title">Proceso de edición</h3><ol class="stage-list" id="stage-list"></ol></section>
+      <section class="event-section" id="event-section" aria-labelledby="events-title" hidden><h3 id="events-title">Actividad</h3><ol class="event-list" id="event-list"></ol></section>
+      <p class="field-error" id="retry-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button class="button button-secondary" type="button" data-close="job-dialog">Cerrar</button><button class="button button-secondary" id="detail-configure" type="button" hidden>Ver configuración</button><button class="button button-primary" id="retry-job" type="button" hidden>Reintentar edición</button></div>
+    </div>
+  </dialog>
+  <div id="live-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

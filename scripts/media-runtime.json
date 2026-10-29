@@ -1,0 +1,26 @@
+{
+  "contract": "astra-v3",
+  "files": [
+    "scripts/media-runtime.json",
+    "package-lock.json",
+    "src/media.mjs",
+    "src/composition.mjs",
+    "src/edit-plan.mjs",
+    "src/recipe.mjs",
+    "src/process.mjs",
+    "scripts/media-remote.mjs",
+    "scripts/media_modal.py",
+    "public/fonts/InterVariable.woff2",
+    "src/reference-composition.mjs",
+    "public/fonts/LiberationSans-Bold.ttf",
+    "public/fonts/LiberationSerif-Italic.ttf",
+    "assets/sfx/whoosh-short.mp3",
+    "assets/sfx/click-soft.mp3",
+    "assets/sfx/impact-bass-1.mp3",
+    "public/fonts/LIBERATION-LICENSE.txt",
+    "public/fonts/REFERENCE-FONTS.md",
+    "assets/sfx/CREDITS.md",
+    "src/visual-context.mjs",
+    "src/remote-media.mjs"
+  ]
+}

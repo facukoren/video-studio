@@ -1,0 +1,2 @@
+# Remote alignment helper; base image uses the existing WhisperX deployment pins.
+num2words==0.5.14

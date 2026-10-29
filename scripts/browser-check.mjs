@@ -1,0 +1,54 @@
+import {chromium} from 'playwright';
+import {mkdtemp,mkdir,rm} from 'node:fs/promises';
+import os from 'node:os';import path from 'node:path';import assert from 'node:assert/strict';
+import {Store} from '../src/store.mjs';import {createApp} from '../src/app.mjs';import {loadConfig} from '../src/config.mjs';
+const config=loadConfig(),dataDir=await mkdtemp(path.join(os.tmpdir(),'kavion-browser-'));
+const store=new Store(path.join(dataDir,'test.sqlite'));const port=4149;const origin=`http://127.0.0.1:${port}`;
+let higgsfieldState={status:'idle'};
+const higgsfieldIntegration={id:'higgsfield',name:'Higgsfield',state:'error',detail:'La cuenta requiere conexión.'};
+const higgsfieldSetup={status:()=>higgsfieldState,start:async()=>higgsfieldState={status:'waiting',authUrl:'https://clerk.higgsfield.ai/oauth/authorize?state=browser-fixture',expiresAt:new Date(Date.now()+600000).toISOString()},complete:async()=>{Object.assign(higgsfieldIntegration,{state:'ready',detail:'Cuenta verificada.'});return higgsfieldState={status:'connected',message:'Cuenta correcta conectada.'};}};
+const app=createApp({store,config:{...config,baseUrl:origin,dataDir,googleClientFile:path.join(dataDir,'google-client.json'),googleTokenPath:path.join(dataDir,'google-tokens.json'),googleRedirectUri:origin+'/api/auth/google/callback',higgsfieldSetup},integrationStatus:async()=>({ready:false,worker:{online:true,lastSeen:new Date().toISOString()},integrations:[{id:'drive',name:'Google Drive',state:'missing',detail:'Falta conectar Google Drive.'},higgsfieldIntegration],destination:{id:store.getSettings().destinationFolderId,name:'Carpeta de salida',url:'https://drive.google.com/drive/folders/'+store.getSettings().destinationFolderId}})});
+const server=app.listen(port,'127.0.0.1');await new Promise(r=>server.once('listening',r));
+const browser=await chromium.launch({headless:true,executablePath:process.env.PUPPETEER_EXECUTABLE_PATH||config.browserExecutablePath,args:['--no-sandbox','--disable-dev-shm-usage','--renderer-process-limit=1']});
+await mkdir('runtime/screenshots',{recursive:true});const errors=[];
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'dark'});page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(origin);await page.locator('#history-empty').waitFor({state:'visible'});
+ assert.equal(await page.locator('#destination-link').textContent(),'Carpeta de salida');
+ await page.screenshot({path:'runtime/screenshots/desktop-dark.png',fullPage:true});
+ await page.locator('#source-url').fill('https://example.com/video.mp4');await page.locator('#submit-video').click();await page.locator('#source-error').waitFor({state:'visible'});assert.equal(store.listJobs().length,0);
+ await page.locator('#settings-open').click();await page.locator('#settings-dialog').waitFor({state:'visible'});
+ await page.locator('#google-client-file').setInputFiles({name:'google-client.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({web:{client_id:'browser-fixture.apps.googleusercontent.com',client_secret:'test-secret-not-real',redirect_uris:[origin+'/api/auth/google/callback']}}))});
+ await page.locator('#upload-google-client').click();await page.locator('#authorize-google').waitFor({state:'visible'});
+ assert.equal(await page.locator('#authorize-google').getAttribute('href'),'/api/auth/google');
+ await page.locator('#start-higgsfield').click();await page.locator('#higgsfield-auth-link').waitFor({state:'visible'});
+ await page.locator('#higgsfield-callback-url').fill('http://localhost:8765/callback?state=browser-fixture&code=test-code-not-real');
+ await page.locator('#complete-higgsfield').click();await page.locator('#higgsfield-setup-success').waitFor({state:'visible'});
+ assert.equal(await page.locator('#higgsfield-callback-url').inputValue(),'');
+ await page.waitForFunction(()=>document.querySelector('#higgsfield-setup-status').textContent==='Higgsfield conectado.');
+ Object.assign(higgsfieldIntegration,{state:'error',detail:'La cuenta ya no coincide con el espacio autorizado.'});
+ assert.equal(higgsfieldState.status,'connected','Setup retains its historical authorization snapshot.');
+ await page.locator('#refresh-connections').click();
+ await page.waitForFunction(()=>!document.querySelector('#start-higgsfield').hidden,null,{timeout:3000});
+ assert.notEqual(await page.locator('#higgsfield-setup-status').textContent(),'Higgsfield conectado.','The current integration failure overrides historical authorization.');
+ await page.locator('#max-credits').fill('12');await page.locator('#save-settings').click();await page.locator('#settings-success').waitFor({state:'visible'});assert.equal(store.getSettings().maxCreditsPerVideo,12);
+ await page.keyboard.press('Escape');assert.equal(await page.locator('#settings-dialog').evaluate(x=>x.open),false);
+ await page.locator('#source-url').fill('https://drive.google.com/file/d/abcdefghijk123/view');await page.locator('#submit-video').click();
+ await page.waitForFunction(()=>document.querySelector('#job-count').textContent==='1');assert.equal(store.listJobs().length,1);
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#job-count').textContent==='1');
+ for(const [theme,width,height]of [['light',1440,1000],['dark',390,844],['light',390,844]]){
+  await page.emulateMedia({colorScheme:theme,reducedMotion:'reduce'});await page.setViewportSize({width,height});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`horizontal overflow ${theme} ${width}`);
+  await page.screenshot({path:`runtime/screenshots/${width<500?'mobile':'desktop'}-${theme}.png`,fullPage:true});
+ }
+ const job=store.listJobs()[0];store.updateJob(job.id,{status:'needs_attention',stage:'broll',error:'El presupuesto requiere revisión.'});
+ await page.locator('#refresh-jobs').click();await page.locator('#job-list .job-button').click();
+ await page.locator('#retry-job').waitFor({state:'visible'});assert.equal(await page.locator('#retry-job').textContent(),'Volver a revisar');
+ await page.locator('#retry-job').click();await page.waitForFunction(()=>document.querySelector('#detail-status').textContent==='En cola');assert.equal(store.getJob(job.id).status,'queued');
+ await page.keyboard.press('Escape');
+ store.updateJob(job.id,{status:'completed',stage:'completed',artifacts:{verification:{ok:true}},result:{fileId:'remote123',url:'https://drive.google.com/file/d/remote123/view',filename:'Resultado.mp4'}});
+ await page.locator('#refresh-jobs').click();await page.locator('#job-list .job-button').click();
+ await page.locator('#preview-unavailable').waitFor({state:'visible'});assert.equal(await page.locator('#result-link').getAttribute('href'),'https://drive.google.com/file/d/remote123/view');
+ await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#result-video').hasAttribute('src'));assert.equal(await page.locator('#job-dialog').evaluate(dialog=>dialog.open),false);
+ assert.deepEqual(errors,[]);console.log('Browser QA passed: live API, Drive JSON import (isolated fake credentials), Higgsfield UI (simulated authorization), callback cleared, current integration failure permits reconnect after authorization, validation, CSRF settings save, durable job/reload, desktop/mobile, dark/light, needs_attention retry, unavailable preview fallback, no JS errors.');
+}finally{await browser.close();await new Promise(r=>server.close(r));store.close();await rm(dataDir,{recursive:true});}
